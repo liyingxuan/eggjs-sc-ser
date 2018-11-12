@@ -5,14 +5,30 @@ const path = require('path'); //系统路径模块
 
 let ScAction = {
 	contractAbiPath: path.join(__dirname, '../public/LoadFiles/abi.json'),
-
 	myFilePath: path.join(__dirname, '../public/LoadFiles/my-pk.json'),
-
+	contractABI: '',
 	myData: {
 		"serverUrl": "",
 		"contractAddress": "",
 		"signAccountPK": "",
 		"croupierAccountPK": ""
+	},
+	scWeb3: '',
+	contracts:'',
+	signAccount: '',
+	croupierAccount: '',
+
+	/**
+	 * 初始化必要参数。
+	 */
+	init: function () {
+		this.contractABI = JSON.parse(fs.readFileSync(this.contractAbiPath));
+		this.myData = JSON.parse(fs.readFileSync(this.myFilePath))[0];
+
+		this.scWeb3 = new web3(new web3.providers.HttpProvider(this.myData.serverUrl));
+		this.contracts = new this.scWeb3.eth.Contract(this.contractABI, this.myData.contractAddress);
+		this.signAccount = this.scWeb3.eth.accounts.privateKeyToAccount(this.myData.signAccountPK);
+		this.croupierAccount = this.scWeb3.eth.accounts.privateKeyToAccount(this.myData.croupierAccountPK);
 	},
 
 	/**
@@ -22,18 +38,14 @@ let ScAction = {
 	 * @return {Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never>}
 	 */
 	getSign: function (randNumber) {
-		let myFile = JSON.parse(fs.readFileSync(this.myFilePath));
-		this.myData = myFile[0];
+		this.init();
 
-		const scWeb3 = new web3(new web3.providers.HttpProvider(this.myData.serverUrl));
-		const signAccount = scWeb3.eth.accounts.privateKeyToAccount(this.myData.signAccountPK);
-
-		return scWeb3.eth.getBlockNumber().then(res => {
+		return this.scWeb3.eth.getBlockNumber().then(res => {
 			let num = res + 64; // 补到未来64的高度
-			let bNumber = scWeb3.utils.padLeft(num, 10);
-			let commit = scWeb3.utils.soliditySha3(randNumber);
-			let hash = scWeb3.utils.soliditySha3(bNumber, commit);
-			let sign = signAccount.sign(hash);
+			let bNumber = this.scWeb3.utils.padLeft(num, 10);
+			let commit = this.scWeb3.utils.soliditySha3(randNumber);
+			let hash = this.scWeb3.utils.soliditySha3(bNumber, commit);
+			let sign = this.signAccount.sign(hash);
 
 			return {
 				blockNum: res,
@@ -47,27 +59,21 @@ let ScAction = {
 
 	// TODO 测试中
 	redeem: function (reveal, blockhash) {
-		let contractABI = JSON.parse(fs.readFileSync(this.contractAbiPath));
-		let myFile = JSON.parse(fs.readFileSync(this.myFilePath));
-		this.myData = myFile[0];
+		this.init();
 
-		const scWeb3 = new web3(new web3.providers.HttpProvider(this.myData.serverUrl));
-		const croupierAccount = scWeb3.eth.accounts.privateKeyToAccount(this.myData.croupierAccountPK);
-		const contracts = new scWeb3.eth.Contract(contractABI, this.myData.contractAddress);
-
-		scWeb3.eth.getTransactionCount(croupierAccount.address).then((nonce) => {
+		this.scWeb3.eth.getTransactionCount(this.croupierAccount.address).then((nonce) => {
 			let rawTransaction = {
-				"from": croupierAccount.address,
-				"gasPrice": scWeb3.utils.toHex(20 * 1e9),
-				"gasLimit": scWeb3.utils.toHex(210000),
+				"from": this.croupierAccount.address,
+				"gasPrice": this.scWeb3.utils.toHex(20 * 1e9),
+				"gasLimit": this.scWeb3.utils.toHex(210000),
 				"to": this.contractAddress,
 				"value": 0,
-				"data": contracts.methods.settleBet(reveal, blockhash).encodeABI(),
-				"nonce": scWeb3.utils.toHex(nonce)
+				"data": this.contracts.methods.settleBet(reveal, blockhash).encodeABI(),
+				"nonce": this.scWeb3.utils.toHex(nonce)
 			};
 
-			croupierAccount.signTransaction(rawTransaction).then((sTx) => {
-				scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then()
+			this.croupierAccount.signTransaction(rawTransaction).then((sTx) => {
+				this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then()
 			});
 		})
 	},
@@ -76,14 +82,9 @@ let ScAction = {
 	 * 定时任务：获取Events的commit类型
 	 */
 	getEvents: function () {
-		let contractABI = JSON.parse(fs.readFileSync(this.contractAbiPath));
-		let myFile = JSON.parse(fs.readFileSync(this.myFilePath));
-		this.myData = myFile[0];
+		this.init();
 
-		const scWeb3 = new web3(new web3.providers.HttpProvider(this.myData.serverUrl));
-		const contracts = new scWeb3.eth.Contract(contractABI, this.myData.contractAddress);
-
-		contracts.getPastEvents('Commit', {
+		this.contracts.getPastEvents('Commit', {
 			fromBlock: 0,
 			toBlock: 'latest'
 		}).then(function (events) {
@@ -102,23 +103,19 @@ let ScAction = {
 	 * @param data
 	 */
 	setEventCommitData: function (data) {
-		let contractABI = JSON.parse(fs.readFileSync(this.contractAbiPath));
-		let myFile = JSON.parse(fs.readFileSync(this.myFilePath));
-		this.myData = myFile[0];
-
-		const scWeb3 = new web3(new web3.providers.HttpProvider(this.myData.serverUrl));
+		this.init();
 
 		console.log(data)
-		scWeb3.eth.getTransaction(data[0].transactionHash).then(res => {
-			const decoder = new InputDataDecoder(contractABI);
+		this.scWeb3.eth.getTransaction(data[0].transactionHash).then(res => {
+			const decoder = new InputDataDecoder(this.contractABI);
 
 			// 解构event获得的数据
 			let inputs = decoder.decodeData(res.input);
-			let value = scWeb3.utils.fromWei(res.value, 'ether') + 'ether';
+			let value = this.scWeb3.utils.fromWei(res.value, 'ether') + 'ether';
 			let mask = inputs.inputs[0].toString();
 			let modulo = inputs.inputs[1].toString();
 			let blockNumber = inputs.inputs[2].toString();
-			let commit = scWeb3.utils.toHex(inputs.inputs[3]);
+			let commit = this.scWeb3.utils.toHex(inputs.inputs[3]);
 
 			// 更新数据到数据库
 			const updates = {
