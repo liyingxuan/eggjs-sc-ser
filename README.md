@@ -46,6 +46,24 @@ $ npm run dev
 $ open http://localhost:7001/api/users/
 ```
 
+### ./app/public/LoadFiles/my-pk.json 文件结构
+> 因为需要提供私钥，所以将文件设置在一个其他位置，线上部署可以更换成线上无法访问的绝对地址。
+```json
+[
+  {
+    "serverUrl": "https://xxx.infura.io/xxx",
+    "contractAddress": "0x",
+    "signAccountPK": "0x",
+    "croupierAccountPK": "0x"
+  }
+]
+```
+
+##### 标准打印
+```javascript
+this.ctx.logger.info('my request data: ', data);
+```
+
 ### 线上部署
 ```bash
 Centos7.x为例：
@@ -65,11 +83,6 @@ $ npm run ser-start
 
 # 停止服务：
 $ npm run ser-stop
-```
-
-##### 标准打印
-```javascript
-this.ctx.logger.info('my request data: ', data);
 ```
 
 ### 数据库迁移
