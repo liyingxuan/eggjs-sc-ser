@@ -1,6 +1,4 @@
-# eggjs-truffle
-
-## eggjs调用eth合约
+# Egg.js调用ETH合约做游戏
 
 ### 目录结构
 ```
@@ -42,8 +40,16 @@ egg-project
 ### 本地开发
 ```bash
 $ npm install
+
+$ cp ./config/config.prod.js ./config/config.local.js
+# 配置需要的local项目
+
+# 安装MySQL，并完成相关配置
+# 然后完成数据库结构迁移：
+$ npx sequelize db:migrate
+
 $ npm run dev
-$ open http://localhost:7001/api/users/
+$ open http://localhost:7001/api/sc/
 ```
 
 ### ./app/public/LoadFiles/my-pk.json 文件结构
@@ -64,27 +70,6 @@ $ open http://localhost:7001/api/users/
 this.ctx.logger.info('my request data: ', data);
 ```
 
-### 线上部署
-```bash
-Centos7.x为例：
-$ yum install git gcc-c++ unzip
-# git获取项目或者scp推上去
-
-# 安装node8.0+：
-$ curl --silent --location https://rpm.nodesource.com/setup_8.x | bash -
-$ yum install nodejs
-$ npm i -g egg-scripts
-
-# cd 项目目录下
-$ npm i
-
-# 启动！然后就可以外网使用服务了
-$ npm run ser-start
-
-# 停止服务：
-$ npm run ser-stop
-```
-
 ### 数据库迁移
 ```bash
 $ npx sequelize migration:generate --name=init-users
@@ -97,7 +82,7 @@ $ npx sequelize db:migrate
 # npx sequelize db:migrate:undo:all
 ```
 
-### Truffle部署合约
+### Truffle部署合约做本地ETH网络联调
 首先安装： [Ganache](https://truffleframework.com/ganache) 。
 ```bash
 # 安装必须组件：
@@ -118,4 +103,27 @@ $ truffle init
 $ truffle migrate --reset
 ```
 
-Transactions里找到CREATED CONTRACT ADDRESS复制到Action.js
+### 线上部署
+```bash
+Centos7.x为例：
+$ yum install git gcc-c++ unzip
+# git获取项目或者scp推上去
+
+# 安装node8.0+：
+$ curl --silent --location https://rpm.nodesource.com/setup_8.x | bash -
+$ yum install nodejs
+$ npm i -g egg-scripts
+
+# cd 项目目录下
+$ npm i
+
+# 安装MySQL，并完成相关配置
+# 然后完成数据库结构迁移：
+$ npx sequelize db:migrate
+
+# 启动！然后就可以外网使用服务了
+$ npm run ser-start
+
+# 停止服务：
+$ npm run ser-stop
+```
