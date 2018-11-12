@@ -8,3 +8,4 @@ package-lock.json
 
 # My files
 app/public/LoadFiles/my-pk.json
+config/config.local.js

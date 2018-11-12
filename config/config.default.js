@@ -11,7 +11,7 @@ module.exports = appInfo => {
 	// Egg.js中的ORM框架
 	config.sequelize = {
 		dialect: 'mysql',
-		host: '139.129.196.82',
+		host: '127.0.0.1',
 		port: 3306,
 		database: 'node-js',
 		password: 'password'
