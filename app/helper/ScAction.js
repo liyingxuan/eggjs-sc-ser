@@ -2,6 +2,8 @@ const web3 = require('web3');
 const Tx = require('ethereumjs-tx');
 const fs = require('fs');
 const path = require('path'); //系统路径模块
+const InputDataDecoder = require('ethereum-input-data-decoder');
+const Egg = require('egg');
 
 let ScAction = {
 	contractAbiPath: path.join(__dirname, '../public/LoadFiles/abi.json'),
@@ -14,7 +16,7 @@ let ScAction = {
 		"croupierAccountPK": ""
 	},
 	scWeb3: '',
-	contracts:'',
+	contracts: '',
 	signAccount: '',
 	croupierAccount: '',
 
@@ -57,42 +59,20 @@ let ScAction = {
 		})
 	},
 
-	// TODO 测试中
-	redeem: function (reveal, blockhash) {
-		this.init();
-
-		this.scWeb3.eth.getTransactionCount(this.croupierAccount.address).then((nonce) => {
-			let rawTransaction = {
-				"from": this.croupierAccount.address,
-				"gasPrice": this.scWeb3.utils.toHex(20 * 1e9),
-				"gasLimit": this.scWeb3.utils.toHex(210000),
-				"to": this.contractAddress,
-				"value": 0,
-				"data": this.contracts.methods.settleBet(reveal, blockhash).encodeABI(),
-				"nonce": this.scWeb3.utils.toHex(nonce)
-			};
-
-			this.croupierAccount.signTransaction(rawTransaction).then((sTx) => {
-				this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then()
-			});
-		})
-	},
-
 	/**
 	 * 定时任务：获取Events的commit类型
 	 */
-	getEvents: function () {
+	getEvents: function (ctx) {
 		this.init();
 
 		this.contracts.getPastEvents('Commit', {
-			fromBlock: 0,
+			fromBlock: 4420403,
 			toBlock: 'latest'
 		}).then(function (events) {
-			console.log('event data: ');
-			console.log(events);
-
 			if (events.length > 0) {
-				this.setEventCommitData(events);
+				for(let index in events) {
+					ScAction.setEventCommitData(events[index], ctx);
+				}
 			}
 		});
 	},
@@ -102,11 +82,10 @@ let ScAction = {
 	 *
 	 * @param data
 	 */
-	setEventCommitData: function (data) {
+	setEventCommitData: function (data, ctx) {
 		this.init();
 
-		console.log(data)
-		this.scWeb3.eth.getTransaction(data[0].transactionHash).then(res => {
+		this.scWeb3.eth.getTransaction(data.transactionHash).then(res => {
 			const decoder = new InputDataDecoder(this.contractABI);
 
 			// 解构event获得的数据
@@ -124,30 +103,85 @@ let ScAction = {
 				modulo: modulo,
 				blockNumber: blockNumber
 			};
-			console.log('commit: ' + commit)
-			console.log(updates)
-			let dbData = this.updateSC(commit, updates)
-			console.log(dbData)
 
-			this.redeem(dbData.random, data[0].blockHash);
+			this.updateSC(ctx, commit, updates).then(res => {
+				if(res.status === 'starting') { // starting：开始游戏； sent：已发送settleBet； completed：已完成。
+					this.redeem(ctx, res.commit, res.random, data.blockHash);
+				}
+			});
 		});
 	},
 
 	/**
-	 * 更新数据到SC库里。
+	 * 赎回
 	 *
+	 * @param ctx
+	 * @param commit
+	 * @param reveal
+	 * @param blockHash
+	 * @return {Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>}
+	 */
+	redeem: function (ctx, commit, reveal, blockHash) {
+		this.init();
+
+		return this.scWeb3.eth.getTransactionCount(this.croupierAccount.address).then((nonce) => {
+			let rawTransaction = {
+				"from": this.croupierAccount.address,
+				"gasPrice": this.scWeb3.utils.toHex(20 * 1e9),
+				"gasLimit": this.scWeb3.utils.toHex(210000),
+				"to": this.myData.contractAddress,
+				"value": 0,
+				"data": this.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
+				"nonce": this.scWeb3.utils.toHex(nonce)
+			};
+
+			return this.croupierAccount.signTransaction(rawTransaction).then(sTx => {
+				this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
+					return this.updateStatus(ctx, commit, res)
+				})
+			});
+		})
+	},
+
+	/**
+	 * 更新commit数据到SC库里。
+	 *
+	 * @param ctx
 	 * @param commit
 	 * @param updates
 	 * @return {*}
 	 */
-	updateSC: function (commit, updates) {
-		const ctx = this.ctx;
+	updateSC: async function (ctx, commit, updates) {
 		const params = {
 			commit: commit,
 			updates: updates
 		};
 
-		return ctx.service.smartContract.update(params);
+		return await ctx.service.smartContract.update(params).then(res => {
+			return res;
+		});
+	},
+
+	/**
+	 * 更新settleBetRet和status
+	 *
+	 * @param ctx
+	 * @param commit
+	 * @param resData
+	 * @return {Promise<any | R | T>}
+	 */
+	updateStatus: async function (ctx, commit, resData) {
+		const params = {
+			commit: commit,
+			updates: {
+				settleBetRet: JSON.stringify(resData),
+				status: 'sent'
+			}
+		};
+
+		return await ctx.service.smartContract.update(params).then(res => {
+			return res;
+		});
 	}
 };
 

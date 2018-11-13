@@ -24,6 +24,7 @@ class SmartContractController extends Controller {
 		// JSON对象格式返回
 		for (let data in allData.rows) {
 			allData.rows[data].dataValues.sign = JSON.parse(allData.rows[data].dataValues.sign)
+			allData.rows[data].dataValues.settleBetRet = JSON.parse(allData.rows[data].dataValues.settleBetRet)
 		}
 
 		ctx.body = allData
@@ -54,29 +55,36 @@ class SmartContractController extends Controller {
 		const ctx = this.ctx;
 		let randStr, res;
 
-		// 获取随机数和签名
-		try {
-			do {
-				randStr = MathExtend.getRandomStr(64);
-				res = await ScAction.getSign(randStr);
-			} while (res.sign.v !== '0x1b') ; // 必须要0x1b，否则无法使用
-		} catch (e) {
-			ctx.status = 500;
-			ctx.body = res;
+		if (typeof(ctx.request.body.address) === 'undefined' || ctx.request.body.address === '') {
+			// 返回错误给前台
+			ctx.status = 400;
+			ctx.body = {info: 'address is required'};
+		} else {
+			// 获取随机数和签名
+			try {
+				do {
+					randStr = MathExtend.getRandomStr(64);
+					res = await ScAction.getSign(randStr);
+				} while (res.sign.v !== '0x1b') ; // 必须要0x1b，否则无法使用
+			} catch (e) {
+				ctx.status = 500;
+				ctx.body = res;
+			}
+
+			// 数据构造
+			res.address = ctx.request.body.address;
+			let status = 'starting'; // starting：开始游戏； sent：已发送settleBet； completed：已完成。
+			let {address, blockNum, usedNum, random, commit, sign} = res;
+			sign = JSON.stringify(sign); // String格式存入DB
+
+			// 入库
+			const ret = await ctx.service.smartContract.create({address, blockNum, usedNum, random, commit, sign, status});
+			ret.sign = JSON.parse(ret.sign); // JSON对象格式返回
+
+			// 返回数据给前台
+			ctx.status = 201;
+			ctx.body = ret;
 		}
-
-		// 数据构造
-		res.address = ctx.request.body.address;
-		let {address, blockNum, usedNum, random, commit, sign} = res;
-		sign = JSON.stringify(sign); // String格式存入DB
-
-		// 入库
-		const ret = await ctx.service.smartContract.create({address, blockNum, usedNum, random, commit, sign});
-		ret.sign = JSON.parse(ret.sign); // JSON对象格式返回
-
-		// 返回数据给前台
-		ctx.status = 201;
-		ctx.body = ret;
 	}
 
 	/**
@@ -88,7 +96,7 @@ class SmartContractController extends Controller {
 	 *
 	 * @return {Promise<void>}
 	 */
-	async update() {}
+	// async update() {}
 
 	/**
 	 * Method: DELETE
@@ -97,7 +105,7 @@ class SmartContractController extends Controller {
 	 *
 	 * @return {Promise<void>}
 	 */
-	async destroy() {}
+	// async destroy() {}
 }
 
 module.exports = SmartContractController;

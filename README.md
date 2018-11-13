@@ -120,6 +120,8 @@ $ npm i
 # 安装MySQL，并完成相关配置
 # 然后完成数据库结构迁移：
 $ npx sequelize db:migrate
+# 如果有问题需要回滚，可以通过 `db:migrate:undo` 回退一个变更
+# npx sequelize db:migrate:undo
 
 # 启动！然后就可以外网使用服务了
 $ npm run ser-start

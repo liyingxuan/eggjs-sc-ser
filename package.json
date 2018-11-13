@@ -9,6 +9,7 @@
     "egg-mysql": "^3.0.0",
     "egg-sequelize": "^4.1.0",
     "egg-validate": "^1.0.0",
+    "ethereum-input-data-decoder": "0.0.12",
     "fs": "0.0.1-security",
     "mysql2": "^1.6.1",
     "truffle-contract": "^3.0.6",

@@ -32,11 +32,19 @@ class SmartContract extends Service {
 
 	// 更新数据
 	async update({commit, updates}) {
-		const data = await this.ctx.model.SmartContract.find('commit', commit);
+		const data = await this.ctx.model.SmartContract.find({
+			where: {
+				commit: commit
+			}
+		});
 		if (!data) {
-			this.ctx.throw(404, 'data not found');
+			return false
 		}
-		return data.update(updates);
+
+		// 更新入库
+		data.update(updates);
+
+		return data;
 	}
 }
 

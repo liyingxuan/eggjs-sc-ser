@@ -15,7 +15,8 @@ module.exports = app => {
 		mask: STRING(64), // event获得的用户下注数据
 		modulo: STRING(64), // event获得的游戏类型
 		blockNumber: STRING(64), // event获得的块高
-		status: STRING(16), //
+		settleBetRet: TEXT, // settleBet的返回数据
+		status: STRING(64), // starting：开始游戏； sent：已发送settleBet； completed：已完成。
 		created_at: DATE,
 		updated_at: DATE,
 	});
