@@ -105,7 +105,7 @@ let ScAction = {
 			};
 
 			this.updateSC(ctx, commit, updates).then(res => {
-				if(res.status === 'starting') { // starting：开始游戏； sent：已发送settleBet； completed：已完成。
+				if (res !== false) {
 					this.redeem(ctx, res.commit, res.random, data.blockHash);
 				}
 			});

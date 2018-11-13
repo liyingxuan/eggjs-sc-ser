@@ -11,35 +11,54 @@ class SmartContractController extends Controller {
 	 * URL: http://localhost:7001/api/sc/
 	 * Func: 获取全部数据，默认10条。
 	 *
-	 * 获取5条每页的第2页：
-	 * http://localhost:7001/api/sc?limit=5&offset=2
+	 * 获取5条每页的第2页，地址是test的（3个参数都可选）：
+	 * http://localhost:7001/api/sc?limit=5&offset=2&address=test
 	 *
 	 * @return {Promise<void>}
 	 */
 	async index() {
 		const ctx = this.ctx;
-		const query = {limit: MyTools.toInt(ctx.query.limit), offset: MyTools.toInt(ctx.query.offset)};
-		let allData = await ctx.service.smartContract.list(query);
+		const query = {
+			limit: MyTools.toInt(ctx.query.limit),
+			offset: MyTools.toInt(ctx.query.offset),
+			address: ctx.query.address
+		};
 
-		// JSON对象格式返回
-		for (let data in allData.rows) {
-			allData.rows[data].dataValues.sign = JSON.parse(allData.rows[data].dataValues.sign)
-			allData.rows[data].dataValues.settleBetRet = JSON.parse(allData.rows[data].dataValues.settleBetRet)
-		}
+		let allData = await ctx.service.smartContract.list(query);
+		allData.rows = await this.retDataParse(allData.rows);
 
 		ctx.body = allData
 	}
 
 	/**
 	 * Method: GET
-	 * URL: http://localhost:7001/api/sc/[address]
-	 * Func:根据地址查看该地址全部游戏。
+	 * URL: http://localhost:7001/api/sc/[commit]
+	 * Func:根据commit查看信息。
 	 *
 	 * @return {Promise<void>}
 	 */
 	async show() {
 		const ctx = this.ctx;
-		ctx.body = await ctx.service.smartContract.find(ctx.params.id);
+		const query = {commit: ctx.params.id};
+
+		let allData = await ctx.service.smartContract.find(query);
+
+		ctx.body = await this.retDataParse(allData)
+	}
+
+	/**
+	 * JSON对象格式返回
+	 *
+	 * @param allData
+	 * @return {Promise<*>}
+	 */
+	async retDataParse(allData) {
+		for (let data in allData) {
+			allData[data].dataValues.sign = JSON.parse(allData[data].dataValues.sign);
+			allData[data].dataValues.settleBetRet = JSON.parse(allData[data].dataValues.settleBetRet)
+		}
+
+		return allData
 	}
 
 	/**
