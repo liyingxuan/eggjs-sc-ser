@@ -4,26 +4,32 @@ const Service = require('egg').Service;
 
 class SmartContract extends Service {
 	// 向数据库请求全部数据，默认10条
-	async list({offset = 0, limit = 10, address}) {
-		if(typeof(address) === 'undefined' || address === '') {
+	async list({offset = 0, limit = 10, address, modulo}) {
+		if ((typeof(address) === 'undefined' || address === '') && (typeof(modulo) === 'undefined' || modulo === '')) {
 			return this.ctx.model.SmartContract.findAndCountAll({
 				offset,
 				limit,
 				order: [['created_at', 'desc'], ['id', 'desc']],
 			});
 		} else {
+			let where = {};
+
+			if (typeof(modulo) === 'undefined' || modulo === '') {
+				where = {address: address}
+			} else {
+				where = {modulo: modulo}
+			}
+
 			return this.ctx.model.SmartContract.findAndCountAll({
 				offset,
 				limit,
 				order: [['created_at', 'desc'], ['id', 'desc']],
-				where: {
-					address: address
-				}
+				where: where
 			});
 		}
 	}
 
-	// 向数据库获取指定address的数据
+	// 向数据库获取指定commit的数据
 	async find({commit}) {
 		const data = await this.ctx.model.SmartContract.findAll({
 			where: {

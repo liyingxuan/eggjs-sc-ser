@@ -21,7 +21,8 @@ class SmartContractController extends Controller {
 		const query = {
 			limit: MyTools.toInt(ctx.query.limit),
 			offset: MyTools.toInt(ctx.query.offset),
-			address: ctx.query.address
+			address: ctx.query.address,
+			modulo: ctx.query.modulo
 		};
 
 		let allData = await ctx.service.smartContract.list(query);
