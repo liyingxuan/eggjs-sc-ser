@@ -58,6 +58,23 @@ class SmartContract extends Service {
 
 		return data;
 	}
+
+	// 更新Payment数据
+	async updatePaymentStatus({txHash, updates}) {
+		const data = await this.ctx.model.SmartContract.find({
+			where: {
+				txHash: txHash
+			}
+		});
+		if (!data) {
+			return false
+		}
+
+		// 更新入库
+		data.update(updates);
+
+		return data;
+	}
 }
 
 module.exports = SmartContract;

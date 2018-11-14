@@ -55,7 +55,8 @@ class SmartContractController extends Controller {
 	async retDataParse(allData) {
 		for (let data in allData) {
 			allData[data].dataValues.sign = JSON.parse(allData[data].dataValues.sign);
-			allData[data].dataValues.settleBetRet = JSON.parse(allData[data].dataValues.settleBetRet)
+			allData[data].dataValues.settleBetRet = JSON.parse(allData[data].dataValues.settleBetRet);
+			allData[data].dataValues.paymentRet = JSON.parse(allData[data].dataValues.paymentRet)
 		}
 
 		return allData

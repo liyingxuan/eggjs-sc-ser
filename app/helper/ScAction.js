@@ -65,16 +65,38 @@ let ScAction = {
 	getEvents: function (ctx) {
 		this.init();
 
+		// event Commit
 		this.contracts.getPastEvents('Commit', {
 			fromBlock: 4420403,
 			toBlock: 'latest'
-		}).then(function (events) {
+		}).then(events => {
 			if (events.length > 0) {
-				for(let index in events) {
+				for (let index in events) {
 					ScAction.setEventCommitData(events[index], ctx);
 				}
 			}
 		});
+
+		// event Payment
+		this.contracts.getPastEvents('Payment', {
+			fromBlock: 4420403,
+			toBlock: 'latest'
+		}).then(events => {
+			if (events.length > 0) {
+				for (let index in events) {
+					if (typeof(events[index].transactionHash) !== 'undefined') {
+						ScAction.updatePayment(ctx, events[index].transactionHash, events[0].returnValues)
+					}
+				}
+			}
+		})
+
+		// this.contracts.getPastEvents('FailedPayment', {
+		// 	fromBlock: 4420403,
+		// 	toBlock: 'latest'
+		// }).then(res => {
+		// 	console.log(res.length)
+		// })
 	},
 
 	/**
@@ -163,7 +185,7 @@ let ScAction = {
 	},
 
 	/**
-	 * 更新settleBetRet和status
+	 * 更新settleBetRet、交易hash和status。
 	 *
 	 * @param ctx
 	 * @param commit
@@ -174,12 +196,32 @@ let ScAction = {
 		const params = {
 			commit: commit,
 			updates: {
+				txHash: typeof(resData.logs[0].transactionHash) === 'undefined' ? '' : resData.logs[0].transactionHash,
 				settleBetRet: JSON.stringify(resData),
 				status: 'sent'
 			}
 		};
 
 		return await ctx.service.smartContract.update(params).then(res => {
+			return res;
+		});
+	},
+
+	/**
+	 * 根据txHash更新event Payment的返回数据。
+	 *
+	 * @param ctx
+	 * @param txHash
+	 * @param paymentRet
+	 * @return {Promise<boolean>}
+	 */
+	updatePayment: async function (ctx, txHash, paymentRet) {
+		const params = {
+			txHash: txHash,
+			updates: {paymentRet: JSON.stringify(paymentRet)}
+		};
+
+		return await ctx.service.smartContract.updatePaymentStatus(params).then(res => {
 			return res;
 		});
 	}
