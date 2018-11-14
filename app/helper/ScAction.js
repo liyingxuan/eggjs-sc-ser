@@ -198,7 +198,7 @@ let ScAction = {
 			updates: {
 				txHash: typeof(resData.logs[0].transactionHash) === 'undefined' ? '' : resData.logs[0].transactionHash,
 				settleBetRet: JSON.stringify(resData),
-				status: 'sent'
+				status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
 			}
 		};
 
@@ -208,7 +208,7 @@ let ScAction = {
 	},
 
 	/**
-	 * 根据txHash更新event Payment的返回数据。
+	 * 根据txHash更新event Payment的返回数据和status。
 	 *
 	 * @param ctx
 	 * @param txHash
@@ -218,7 +218,8 @@ let ScAction = {
 	updatePayment: async function (ctx, txHash, paymentRet) {
 		const params = {
 			txHash: txHash,
-			updates: {paymentRet: JSON.stringify(paymentRet)}
+			updates: {paymentRet: JSON.stringify(paymentRet)},
+			status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
 		};
 
 		return await ctx.service.smartContract.updatePaymentStatus(params).then(res => {
