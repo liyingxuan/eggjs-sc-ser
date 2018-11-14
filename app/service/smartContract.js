@@ -37,10 +37,10 @@ class SmartContract extends Service {
 	}
 
 	// 获取从哪个块高开始
-	async getFromBlock() {
+	async getFromBlock(status) {
 		const data = await this.ctx.model.SmartContract.findOne({
 			where: {
-				status: 'starting',
+				status: status,
 				$add: this.app.Sequelize.where(
 					this.app.Sequelize.fn('DATE', this.app.Sequelize.col('created_at')),
 					this.app.Sequelize.literal('CURRENT_DATE'),

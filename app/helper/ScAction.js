@@ -67,27 +67,36 @@ let ScAction = {
 		let fromBlock = 4420403;
 
 		// 获得状态为starting的当天第一条数据的块高，然后减去300
-		ctx.service.smartContract.getFromBlock().then(res => {
-			fromBlock = res - 300;
-		});
+		ctx.service.smartContract.getFromBlock('starting').then(res => {
+			if (res !== false) {
+				fromBlock = res - 300;
 
-		// event Commit
-		this.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
-			if (events.length > 0) {
-				for (let index in events) {
-					ScAction.setEventCommitData(events[index], ctx);
-				}
+				// event Commit
+				this.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
+					if (events.length > 0) {
+						for (let index in events) {
+							ScAction.setEventCommitData(events[index], ctx);
+						}
+					}
+				});
 			}
 		});
 
-		// event Payment
-		this.contracts.getPastEvents('Payment', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
-			if (events.length > 0) {
-				for (let index in events) {
-					if (typeof(events[index].transactionHash) !== 'undefined') {
-						ScAction.updatePayment(ctx, events[index].transactionHash, events[0].returnValues)
+		// 获得状态为sent的当天第一条数据的块高，然后减去300
+		ctx.service.smartContract.getFromBlock('sent').then(res => {
+			if (res !== false) {
+				fromBlock = res - 300;
+
+				// event Payment
+				this.contracts.getPastEvents('Payment', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
+					if (events.length > 0) {
+						for (let index in events) {
+							if (typeof(events[index].transactionHash) !== 'undefined') {
+								ScAction.updatePayment(ctx, events[index].transactionHash, events[index].returnValues)
+							}
+						}
 					}
-				}
+				});
 			}
 		});
 
