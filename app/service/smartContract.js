@@ -81,7 +81,8 @@ class SmartContract extends Service {
 	async updatePaymentStatus({txHash, updates}) {
 		const data = await this.ctx.model.SmartContract.find({
 			where: {
-				txHash: txHash
+				txHash: txHash,
+				status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
 			}
 		});
 		if (!data) {

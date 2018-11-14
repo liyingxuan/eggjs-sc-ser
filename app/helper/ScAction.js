@@ -218,8 +218,10 @@ let ScAction = {
 	updatePayment: async function (ctx, txHash, paymentRet) {
 		const params = {
 			txHash: txHash,
-			updates: {paymentRet: JSON.stringify(paymentRet)},
-			status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
+			updates: {
+				paymentRet: JSON.stringify(paymentRet),
+				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
+			},
 		};
 
 		return await ctx.service.smartContract.updatePaymentStatus(params).then(res => {
