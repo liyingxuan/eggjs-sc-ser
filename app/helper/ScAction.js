@@ -64,12 +64,15 @@ let ScAction = {
 	 */
 	getEvents: function (ctx) {
 		this.init();
+		let fromBlock = 4420403;
+
+		// 获得状态为starting的当天第一条数据的块高，然后减去300
+		ctx.service.smartContract.getFromBlock().then(res => {
+			fromBlock = res - 300;
+		});
 
 		// event Commit
-		this.contracts.getPastEvents('Commit', {
-			fromBlock: 4420403,
-			toBlock: 'latest'
-		}).then(events => {
+		this.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
 			if (events.length > 0) {
 				for (let index in events) {
 					ScAction.setEventCommitData(events[index], ctx);
@@ -78,10 +81,7 @@ let ScAction = {
 		});
 
 		// event Payment
-		this.contracts.getPastEvents('Payment', {
-			fromBlock: 4420403,
-			toBlock: 'latest'
-		}).then(events => {
+		this.contracts.getPastEvents('Payment', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
 			if (events.length > 0) {
 				for (let index in events) {
 					if (typeof(events[index].transactionHash) !== 'undefined') {
@@ -89,10 +89,10 @@ let ScAction = {
 					}
 				}
 			}
-		})
+		});
 
 		// this.contracts.getPastEvents('FailedPayment', {
-		// 	fromBlock: 4420403,
+		// 	fromBlock: fromBlock,
 		// 	toBlock: 'latest'
 		// }).then(res => {
 		// 	console.log(res.length)

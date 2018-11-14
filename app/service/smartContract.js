@@ -36,6 +36,24 @@ class SmartContract extends Service {
 		return data;
 	}
 
+	// 获取从哪个块高开始
+	async getFromBlock() {
+		const data = await this.ctx.model.SmartContract.findOne({
+			where: {
+				status: 'starting',
+				$add: this.app.Sequelize.where(
+					this.app.Sequelize.fn('DATE', this.app.Sequelize.col('created_at')),
+					this.app.Sequelize.literal('CURRENT_DATE'),
+				)
+			},
+		});
+
+		if (!data) {
+			return false
+		}
+		return data.dataValues.blockNum;
+	}
+
 	// 新建数据
 	async create(initData) {
 		return this.ctx.model.SmartContract.create(initData);
