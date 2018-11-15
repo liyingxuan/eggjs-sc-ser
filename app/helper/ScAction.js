@@ -127,6 +127,15 @@ let ScAction = {
 			let blockNumber = inputs.inputs[2].toString();
 			let commit = this.scWeb3.utils.toHex(inputs.inputs[3]);
 
+			// 补齐0x + 64位长
+			if(commit.length < 66) {
+				let tmpStr = '0';
+				for(let i = 1; i < (66 - commit.length); i++) {
+					tmpStr = '0' + tmpStr
+				}
+				commit = '0x' + tmpStr + commit.substr(2);
+			}
+
 			// 更新数据到数据库
 			const updates = {
 				value: value,
@@ -207,7 +216,7 @@ let ScAction = {
 			updates: {
 				txHash: typeof(resData.logs[0].transactionHash) === 'undefined' ? '' : resData.logs[0].transactionHash,
 				settleBetRet: JSON.stringify(resData),
-				status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
+				status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成。
 			}
 		};
 
@@ -229,7 +238,7 @@ let ScAction = {
 			txHash: txHash,
 			updates: {
 				paymentRet: JSON.stringify(paymentRet),
-				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
+				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。
 			},
 		};
 
