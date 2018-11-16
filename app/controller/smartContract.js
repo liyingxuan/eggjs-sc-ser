@@ -1,7 +1,6 @@
 'use strict';
 
 const Controller = require('egg').Controller;
-const MathExtend = require('../helper/MathExtend');
 const MyTools = require('../helper/MyTools');
 const ScAction = require('../helper/ScAction');
 
@@ -74,18 +73,17 @@ class SmartContractController extends Controller {
 	 */
 	async create() {
 		const ctx = this.ctx;
-		let randStr, res;
+		let res;
 
 		if (typeof(ctx.request.body.address) === 'undefined' || ctx.request.body.address === '') {
 			// 返回错误给前台
 			ctx.status = 400;
 			ctx.body = {info: 'address is required'};
 		} else {
-			// 获取随机数和签名
+			// 签名
 			try {
 				do {
-					randStr = MathExtend.getRandomStr(64);
-					res = await ScAction.getSign(randStr);
+					res = await ScAction.getSign();
 				} while (res.sign.v !== 27) ; // 必须要27，否则无法使用
 			} catch (e) {
 				ctx.status = 500;

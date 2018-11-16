@@ -1,9 +1,7 @@
 const web3 = require('web3');
-const Tx = require('ethereumjs-tx');
 const fs = require('fs');
 const path = require('path'); //系统路径模块
 const InputDataDecoder = require('ethereum-input-data-decoder');
-const Egg = require('egg');
 const EthCrypto = require('eth-crypto');
 
 let ScAction = {
@@ -37,18 +35,18 @@ let ScAction = {
 	/**
 	 * 通过随机数获取签名等信息。
 	 *
-	 * @param randNumber
 	 * @return {Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never>}
 	 */
-	getSign: function (randNumber) {
+	getSign: function () {
 		this.init();
 
 		return this.scWeb3.eth.getBlockNumber().then(res => {
 			let num = res + 64; // 补到未来64的高度
 			let bNumber = this.scWeb3.utils.padLeft(num, 10);
+			let randNumber = this.scWeb3.utils.randomHex(32);
 			let commit = this.scWeb3.utils.soliditySha3(randNumber);
 			let hash = this.scWeb3.utils.soliditySha3(bNumber, commit);
-			// let sign = this.signAccount.sign(hash);
+
 			let signHash = EthCrypto.sign(this.myData.signAccountPK, hash);
 			let sign = {
 				r: signHash.slice(0, 66),
