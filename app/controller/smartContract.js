@@ -86,7 +86,7 @@ class SmartContractController extends Controller {
 				do {
 					randStr = MathExtend.getRandomStr(64);
 					res = await ScAction.getSign(randStr);
-				} while (res.sign.v !== '0x1b') ; // 必须要0x1b，否则无法使用
+				} while (res.sign.v !== 27) ; // 必须要27，否则无法使用
 			} catch (e) {
 				ctx.status = 500;
 				ctx.body = res;

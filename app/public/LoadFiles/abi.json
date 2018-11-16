@@ -2,173 +2,6 @@
   {
     "constant": false,
     "inputs": [],
-    "name": "kill",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "secretSigner",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "jackpotSize",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "betMask",
-        "type": "uint256"
-      },
-      {
-        "name": "modulo",
-        "type": "uint256"
-      },
-      {
-        "name": "commitLastBlock",
-        "type": "uint256"
-      },
-      {
-        "name": "commit",
-        "type": "uint256"
-      },
-      {
-        "name": "r",
-        "type": "bytes32"
-      },
-      {
-        "name": "s",
-        "type": "bytes32"
-      }
-    ],
-    "name": "placeBet",
-    "outputs": [],
-    "payable": true,
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "croupier",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "reveal",
-        "type": "uint256"
-      },
-      {
-        "name": "canonicalBlockNumber",
-        "type": "uint40"
-      }
-    ],
-    "name": "settleBetUncleMerkleProof",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "maxProfit",
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "beneficiary",
-        "type": "address"
-      },
-      {
-        "name": "withdrawAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "withdrawFunds",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "reveal",
-        "type": "uint256"
-      },
-      {
-        "name": "blockHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "settleBet",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [],
     "name": "acceptNextOwner",
     "outputs": [],
     "payable": false,
@@ -205,30 +38,45 @@
   },
   {
     "constant": false,
-    "inputs": [
-      {
-        "name": "newSecretSigner",
-        "type": "address"
-      }
-    ],
-    "name": "setSecretSigner",
+    "inputs": [],
+    "name": "kill",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": true,
-    "inputs": [],
-    "name": "lockedInBets",
-    "outputs": [
+    "constant": false,
+    "inputs": [
       {
-        "name": "",
-        "type": "uint128"
+        "name": "betMask",
+        "type": "uint256"
+      },
+      {
+        "name": "modulo",
+        "type": "uint256"
+      },
+      {
+        "name": "commitLastBlock",
+        "type": "uint256"
+      },
+      {
+        "name": "commit",
+        "type": "uint256"
+      },
+      {
+        "name": "r",
+        "type": "bytes32"
+      },
+      {
+        "name": "s",
+        "type": "bytes32"
       }
     ],
-    "payable": false,
-    "stateMutability": "view",
+    "name": "placeBet",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -268,6 +116,74 @@
       }
     ],
     "name": "setMaxProfit",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "newSecretSigner",
+        "type": "address"
+      }
+    ],
+    "name": "setSecretSigner",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "reveal",
+        "type": "uint256"
+      },
+      {
+        "name": "blockHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "settleBet",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "reveal",
+        "type": "uint256"
+      },
+      {
+        "name": "canonicalBlockNumber",
+        "type": "uint40"
+      }
+    ],
+    "name": "settleBetUncleMerkleProof",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "beneficiary",
+        "type": "address"
+      },
+      {
+        "name": "withdrawAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawFunds",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -346,5 +262,89 @@
     ],
     "name": "Commit",
     "type": "event"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "croupier",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "jackpotSize",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "lockedInBets",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "maxProfit",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "secretSigner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
   }
 ]

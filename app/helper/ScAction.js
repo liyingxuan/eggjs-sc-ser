@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path'); //系统路径模块
 const InputDataDecoder = require('ethereum-input-data-decoder');
 const Egg = require('egg');
+const EthCrypto = require('eth-crypto');
 
 let ScAction = {
 	contractAbiPath: path.join(__dirname, '../public/LoadFiles/abi.json'),
@@ -47,7 +48,13 @@ let ScAction = {
 			let bNumber = this.scWeb3.utils.padLeft(num, 10);
 			let commit = this.scWeb3.utils.soliditySha3(randNumber);
 			let hash = this.scWeb3.utils.soliditySha3(bNumber, commit);
-			let sign = this.signAccount.sign(hash);
+			// let sign = this.signAccount.sign(hash);
+			let signHash = EthCrypto.sign(this.myData.signAccountPK, hash);
+			let sign = {
+				r: signHash.slice(0, 66),
+				s: '0x' + signHash.slice(66, 130),
+				v: this.scWeb3.utils.toDecimal('0x' + signHash.slice(130, 132))
+			};
 
 			return {
 				blockNum: res,
