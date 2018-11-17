@@ -54,8 +54,8 @@ class SmartContractController extends Controller {
 	 */
 	async retDataParse(allData) {
 		for (let data in allData) {
-			allData[data].dataValues.sign = JSON.parse(allData[data].dataValues.sign);
-			allData[data].dataValues.settleBetRet = JSON.parse(allData[data].dataValues.settleBetRet);
+			// allData[data].dataValues.sign = JSON.parse(allData[data].dataValues.sign);
+			// allData[data].dataValues.settleBetRet = JSON.parse(allData[data].dataValues.settleBetRet);
 			allData[data].dataValues.paymentRet = JSON.parse(allData[data].dataValues.paymentRet)
 		}
 
@@ -102,7 +102,14 @@ class SmartContractController extends Controller {
 
 			// 返回数据给前台
 			ctx.status = 201;
-			ctx.body = ret;
+			ctx.body = {
+				usedNum: ret.usedNum,
+				commit: ret.commit,
+				sign: {
+					r: ret.sign.r,
+					s: ret.sign.s
+				}
+			}
 		}
 	}
 

@@ -143,6 +143,7 @@ let ScAction = {
 
 			// 更新数据到数据库
 			const updates = {
+				commitBlockHash: res.blockHash,
 				value: value,
 				mask: mask,
 				modulo: modulo,
@@ -242,7 +243,10 @@ let ScAction = {
 		const params = {
 			txHash: txHash,
 			updates: {
-				paymentRet: JSON.stringify(paymentRet),
+				paymentRet: JSON.stringify({
+					amount: paymentRet.amount,
+					beneficiary: paymentRet.beneficiary
+				}),
 				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。
 			},
 		};
