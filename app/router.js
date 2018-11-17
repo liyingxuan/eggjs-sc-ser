@@ -19,4 +19,6 @@ module.exports = app => {
 	 *
  	 */
 	router.resources('smart-contract', '/api/sc', app.controller.smartContract);
+
+	router.get('/api/misc', app.controller.misc.index);
 };

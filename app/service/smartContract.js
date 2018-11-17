@@ -107,6 +107,38 @@ class SmartContract extends Service {
 
 		return data;
 	}
+
+	// 获取成交的总笔数
+	async getBets() {
+		return await this.ctx.model.SmartContract.findAll({
+			attributes: [[this.app.model.fn('COUNT', this.app.model.col('status')), 'bets']],
+			where: {
+				status: 'completed'
+			}
+		});
+	}
+
+	// 获取成交的总金额
+	async getAmount() {
+		return await this.ctx.model.SmartContract.findAll({
+			attributes: [[this.app.model.literal('SUM(value)'), 'amount']],
+			where: {
+				status: 'completed'
+			}
+		});
+	}
+
+	// 获取大于0.1的总金额
+	async getCurrentJackpot() {
+		return await this.ctx.model.SmartContract.findAll({
+			attributes: [[this.app.model.literal('SUM(value)'), 'currentJackpot']],
+			where: {
+				value: {
+					[this.app.model.Op.gte]: 0.1
+				}
+			}
+		});
+	}
 }
 
 module.exports = SmartContract;
