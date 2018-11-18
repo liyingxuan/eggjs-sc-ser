@@ -126,7 +126,7 @@ let ScAction = {
 
 			// 解构event获得的数据
 			let inputs = decoder.decodeData(res.input);
-			let value = this.scWeb3.utils.fromWei(res.value, 'ether') + 'ether';
+			let value = this.scWeb3.utils.fromWei(res.value, 'ether');
 			let mask = inputs.inputs[0].toString();
 			let modulo = inputs.inputs[1].toString();
 			let blockNumber = inputs.inputs[2].toString();
