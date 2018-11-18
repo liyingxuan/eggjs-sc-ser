@@ -5,7 +5,7 @@ const Service = require('egg').Service;
 class SmartContract extends Service {
 	// 向数据库请求全部数据，默认10条
 	async list({offset = 0, limit = 10, address, modulo}) {
-		const attributes = ['address', 'random', 'commitBlockHash', 'value', 'mask', 'modulo', 'txHash', 'paymentRet'];
+		const attributes = ['address', 'random', 'placeTxHash', 'commitBlockHash', 'value', 'mask', 'modulo', 'txHash', 'paymentRet'];
 		const order = [['id', 'desc']];
 
 		if ((typeof(address) === 'undefined' || address === '') && (typeof(modulo) === 'undefined' || modulo === '')) {
@@ -36,7 +36,7 @@ class SmartContract extends Service {
 
 	// 向数据库获取指定commit的数据
 	async find({commit}) {
-		const attributes = ['address', 'random', 'commitBlockHash', 'value', 'mask', 'modulo', 'txHash', 'paymentRet'];
+		const attributes = ['address', 'random', 'placeTxHash', 'commitBlockHash', 'value', 'mask', 'modulo', 'txHash', 'paymentRet'];
 		const data = await this.ctx.model.SmartContract.findAll({
 			attributes: attributes,
 			where: {

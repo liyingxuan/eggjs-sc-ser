@@ -11,6 +11,7 @@ module.exports = app => {
 		random: STRING(34),
 		commit: STRING(66),
 		sign: TEXT,
+		placeTxHash: STRING(66), // event commit获得的place tx Hash
 		commitBlockHash: STRING(66), // event commit获得的blockHash
 		value: FLOAT(2, 2), // event获得的游戏下注额度
 		mask: STRING(64), // event获得的用户下注数据

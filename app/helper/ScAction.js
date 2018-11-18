@@ -69,7 +69,7 @@ let ScAction = {
 	 */
 	getEvents: function (ctx) {
 		this.init();
-		let fromBlock = 4420403;
+		let fromBlock = 4452452;
 
 		// 获得状态为starting的当天第一条数据的块高，然后减去300
 		ctx.service.smartContract.getFromBlock('starting').then(res => {
@@ -143,6 +143,7 @@ let ScAction = {
 
 			// 更新数据到数据库
 			const updates = {
+				placeTxHash: res.hash,
 				commitBlockHash: res.blockHash,
 				value: value,
 				mask: mask,
