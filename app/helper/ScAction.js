@@ -184,7 +184,9 @@ let ScAction = {
 
 			return this.croupierAccount.signTransaction(rawTransaction).then(sTx => {
 				this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-					return this.updateStatus(ctx, commit, res)
+					return this.updateStatus(ctx, commit, res, true)
+				}).catch(error => {
+					return this.updateStatus(ctx, commit, error, false)
 				})
 			});
 		})
@@ -215,17 +217,31 @@ let ScAction = {
 	 * @param ctx
 	 * @param commit
 	 * @param resData
+	 * @param right
 	 * @return {Promise<any | R | T>}
 	 */
-	updateStatus: async function (ctx, commit, resData) {
-		const params = {
-			commit: commit,
-			updates: {
-				txHash: typeof(resData.logs[0].transactionHash) === 'undefined' ? '' : resData.logs[0].transactionHash,
-				settleBetRet: JSON.stringify(resData),
-				status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成。
-			}
-		};
+	updateStatus: async function (ctx, commit, resData, right) {
+		let params = {};
+
+		if (right) {
+			params = {
+				commit: commit,
+				updates: {
+					txHash: typeof(resData.logs[0].transactionHash) === 'undefined' ? '' : resData.logs[0].transactionHash,
+					settleBetRet: JSON.stringify(resData),
+					status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
+				}
+			};
+		} else {
+			params = {
+				commit: commit,
+				updates: {
+					txHash: '',
+					settleBetRet: resData,
+					status: 'error' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
+				}
+			};
+		}
 
 		return await ctx.service.smartContract.update(params).then(res => {
 			return res;
@@ -248,7 +264,7 @@ let ScAction = {
 					amount: paymentRet.amount,
 					beneficiary: paymentRet.beneficiary
 				}),
-				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成。
+				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
 			},
 		};
 

@@ -18,7 +18,7 @@ class MiscController extends Controller {
 				amount: amount[0].dataValues.amount,
 				bets: bets[0].dataValues.bets
 			},
-			currentJackpot: ((currentJackpot[0].dataValues.bets) * 0.001),
+			currentJackpot: ((currentJackpot[0].dataValues.bets) * 0.001).toFixed(4),
 			last5LuckyMan: [{
 				address: '',
 				amount: 0,
