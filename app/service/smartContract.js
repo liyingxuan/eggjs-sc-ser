@@ -128,10 +128,10 @@ class SmartContract extends Service {
 		});
 	}
 
-	// 获取大于0.1的总金额
+	// 获取大于0.1的总笔数
 	async getCurrentJackpot() {
 		return await this.ctx.model.SmartContract.findAll({
-			attributes: [[this.app.model.literal('SUM(value)'), 'currentJackpot']],
+			attributes: [[this.app.model.fn('COUNT', this.app.model.col('value')), 'bets']],
 			where: {
 				value: {
 					[this.app.model.Op.gte]: 0.1
