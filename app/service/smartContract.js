@@ -43,9 +43,11 @@ class SmartContract extends Service {
 				commit: commit
 			}
 		});
+
 		if (!data) {
 			this.ctx.throw(404, 'commit not found');
 		}
+
 		return data;
 	}
 
