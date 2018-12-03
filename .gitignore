@@ -7,5 +7,5 @@ logs/
 package-lock.json
 
 # My files
-app/public/LoadFiles/my-pk.json
+app/public/LoadFiles/*
 config/config.local.js

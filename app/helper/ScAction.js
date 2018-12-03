@@ -83,9 +83,9 @@ let ScAction = {
 							ScAction.setEventCommitData(events[index], ctx);
 						}
 					}
-				});
+				}).catch(error => {});
 			}
-		});
+		}).catch(error => {});
 
 		// 获得状态为sent的当天第一条数据的块高，然后减去300
 		ctx.service.smartContract.getFromBlock('sent').then(res => {
@@ -101,9 +101,9 @@ let ScAction = {
 							}
 						}
 					}
-				});
+				}).catch(error => {});
 			}
-		});
+		}).catch(error => {});
 
 		// this.contracts.getPastEvents('FailedPayment', {
 		// 	fromBlock: fromBlock,
@@ -237,7 +237,7 @@ let ScAction = {
 				commit: commit,
 				updates: {
 					txHash: '',
-					settleBetRet: resData,
+					settleBetRet: resData.toString(),
 					status: 'error' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
 				}
 			};
