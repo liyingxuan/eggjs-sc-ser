@@ -83,9 +83,11 @@ let ScAction = {
 							ScAction.setEventCommitData(events[index], ctx);
 						}
 					}
-				}).catch(error => {});
+				}).catch(error => {
+				});
 			}
-		}).catch(error => {});
+		}).catch(error => {
+		});
 
 		// 获得状态为sent的当天第一条数据的块高，然后减去300
 		ctx.service.smartContract.getFromBlock('sent').then(res => {
@@ -101,22 +103,18 @@ let ScAction = {
 							}
 						}
 					}
-				}).catch(error => {});
+				}).catch(error => {
+				});
 			}
-		}).catch(error => {});
-
-		// this.contracts.getPastEvents('FailedPayment', {
-		// 	fromBlock: fromBlock,
-		// 	toBlock: 'latest'
-		// }).then(res => {
-		// 	console.log(res.length)
-		// })
+		}).catch(error => {
+		});
 	},
 
 	/**
 	 * 将符合要求的commit数据入库
 	 *
 	 * @param data
+	 * @param ctx
 	 */
 	setEventCommitData: function (data, ctx) {
 		this.init();
@@ -195,8 +193,6 @@ let ScAction = {
 					})
 				});
 			})
-
-
 		})
 	},
 
@@ -214,7 +210,7 @@ let ScAction = {
 			updates: updates
 		};
 
-		return await ctx.service.smartContract.update(params).then(res => {
+		return await ctx.service.smartContract.update(params, 'starting').then(res => {
 			return res;
 		});
 	},
@@ -235,8 +231,8 @@ let ScAction = {
 				status: 'send' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
 			}
 		};
-		
-		return await ctx.service.smartContract.update(params).then(res => {
+
+		return await ctx.service.smartContract.update(params, 'starting').then(res => {
 			return res;
 		});
 	},
@@ -273,7 +269,7 @@ let ScAction = {
 			};
 		}
 
-		return await ctx.service.smartContract.update(params).then(res => {
+		return await ctx.service.smartContract.update(params, 'send').then(res => {
 			return res;
 		});
 	},

@@ -75,11 +75,11 @@ class SmartContract extends Service {
 	}
 
 	// 更新数据
-	async update({commit, updates}) {
+	async update({commit, updates}, status) {
 		const data = await this.ctx.model.SmartContract.find({
 			where: {
 				commit: commit,
-				status: 'starting' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
+				status: status // starting：开始游戏；send:发送了sign； sent：已发送settleBet； completed：已完成。
 			}
 		});
 		if (!data) {
@@ -97,7 +97,7 @@ class SmartContract extends Service {
 		const data = await this.ctx.model.SmartContract.find({
 			where: {
 				txHash: txHash,
-				status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成。'
+				status: 'sent' // starting：开始游戏；send:发送了sign； sent：已发送settleBet； completed：已完成。
 			}
 		});
 		if (!data) {
