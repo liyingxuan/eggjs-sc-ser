@@ -184,6 +184,9 @@ let ScAction = {
 					"nonce": this.scWeb3.utils.toHex(nonce)
 				};
 
+				// Update to send
+				this.updateStatusSend(ctx, commit, rawTransaction);
+
 				return this.croupierAccount.signTransaction(rawTransaction).then(sTx => {
 					this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
 						return this.updateStatus(ctx, commit, res, true)
@@ -217,6 +220,28 @@ let ScAction = {
 	},
 
 	/**
+	 * 已经发送过signTransaction
+	 *
+	 * @param ctx
+	 * @param commit
+	 * @param rawTransaction
+	 * @return {Promise<any | R | T>}
+	 */
+	updateStatusSend: async function(ctx, commit, rawTransaction) {
+		let params = {
+			commit: commit,
+			updates: {
+				sendSignTxData: JSON.stringify(rawTransaction),
+				status: 'send' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
+			}
+		};
+		
+		return await ctx.service.smartContract.update(params).then(res => {
+			return res;
+		});
+	},
+
+	/**
 	 * 更新settleBetRet、交易hash和status。
 	 *
 	 * @param ctx
@@ -234,7 +259,7 @@ let ScAction = {
 				updates: {
 					txHash: typeof(resData.logs[0].transactionHash) === 'undefined' ? '' : resData.logs[0].transactionHash,
 					settleBetRet: JSON.stringify(resData),
-					status: 'sent' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
+					status: 'sent' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
 				}
 			};
 		} else {
@@ -243,7 +268,7 @@ let ScAction = {
 				updates: {
 					txHash: '',
 					settleBetRet: resData.toString(),
-					status: 'error' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
+					status: 'error' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
 				}
 			};
 		}
@@ -269,7 +294,7 @@ let ScAction = {
 					amount: paymentRet.amount,
 					beneficiary: paymentRet.beneficiary
 				}),
-				status: 'completed' // starting：开始游戏； sent：已发送settleBet； completed：已完成; error：出错。
+				status: 'completed' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
 			},
 		};
 
