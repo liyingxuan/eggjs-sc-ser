@@ -172,23 +172,28 @@ let ScAction = {
 		this.init();
 
 		return this.scWeb3.eth.getTransactionCount(this.croupierAccount.address).then((nonce) => {
-			let rawTransaction = {
-				"from": this.croupierAccount.address,
-				"gasPrice": this.scWeb3.utils.toHex(20 * 1e9),
-				"gasLimit": this.scWeb3.utils.toHex(210000),
-				"to": this.myData.contractAddress,
-				"value": 0,
-				"data": this.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
-				"nonce": this.scWeb3.utils.toHex(nonce)
-			};
+			// Get gas price
+			return this.scWeb3.eth.getGasPrice().then(price => {
+				let rawTransaction = {
+					"from": this.croupierAccount.address,
+					"gasPrice": this.scWeb3.utils.toHex(price),
+					"gasLimit": this.scWeb3.utils.toHex(210000),
+					"to": this.myData.contractAddress,
+					"value": 0,
+					"data": this.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
+					"nonce": this.scWeb3.utils.toHex(nonce)
+				};
 
-			return this.croupierAccount.signTransaction(rawTransaction).then(sTx => {
-				this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-					return this.updateStatus(ctx, commit, res, true)
-				}).catch(error => {
-					return this.updateStatus(ctx, commit, error, false)
-				})
-			});
+				return this.croupierAccount.signTransaction(rawTransaction).then(sTx => {
+					this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
+						return this.updateStatus(ctx, commit, res, true)
+					}).catch(error => {
+						return this.updateStatus(ctx, commit, error, false)
+					})
+				});
+			})
+
+
 		})
 	},
 
