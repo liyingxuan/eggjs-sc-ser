@@ -34,6 +34,7 @@
     "ci": "npm run lint && npm run cov",
     "autod": "autod",
     "ser-start": "egg-scripts start --daemon --title=egg-server-bds --workers=2",
+    "ser-start-https": "egg-scripts start --port=443 --https.key=XXXX.key --https.cert=XXXXX.crt --daemon --title=egg-server-bds --workers=2",
     "ser-stop": "egg-scripts stop --title=egg-server-bds"
   },
   "ci": {
