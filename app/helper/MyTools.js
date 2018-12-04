@@ -15,6 +15,23 @@ MyTools = {
 		if (typeof str === 'number') return str;
 		if (!str) return str;
 		return parseInt(str, 10) || 0;
+	},
+
+	/**
+	 * 补齐0x + 64位长
+	 *
+	 * @param str
+	 * @return {*}
+	 */
+	to66Length: function (str) {
+		let tmpStr = '';
+		if(str.length < 64) {
+			for(let i = 0; i < (64 - str.length); i++) {
+				tmpStr = '0' + tmpStr
+			}
+		}
+
+		return '0x' + tmpStr + str
 	}
 };
 

@@ -3,7 +3,13 @@ const fs = require('fs');
 const path = require('path'); //系统路径模块
 const InputDataDecoder = require('ethereum-input-data-decoder');
 const EthCrypto = require('eth-crypto');
+const MyTools = require('./MyTools');
 
+/**
+ * SmartContact Action
+ *
+ * @type {{contractAbiPath: string, myFilePath: string, contractABI: string, myData: {serverUrl: string, contractAddress: string, signAccountPK: string, croupierAccountPK: string}, scWeb3: string, contracts: string, signAccount: string, croupierAccount: string, init: ScAction.init, getSign: (function(): (Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never>)), getEvents: ScAction.getEvents, setEventCommitData: ScAction.setEventCommitData, redeem: (function(*=, *=, *=, *=): (Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>)), updateSC: (function(*, *=, *=): (any | R | T)), updateStatusSend: (function(*, *=, *=): (any | R | T)), updateStatus: (function(*, *=, *=, *=): (any | R | T)), updatePayment: (function(*, *=, *): boolean)}}
+ */
 let ScAction = {
 	contractAbiPath: path.join(__dirname, '../public/LoadFiles/abi.json'),
 	myFilePath: path.join(__dirname, '../public/LoadFiles/my-pk.json'),
@@ -104,10 +110,36 @@ let ScAction = {
 						}
 					}
 				}).catch(error => {
-				});
+				})
 			}
 		}).catch(error => {
 		});
+
+		// 获得状态为send的当天第一条数据的块高，然后减去300
+		// ctx.service.smartContract.getFromBlock('starting').then(res => {
+		// 	if (res !== false) {
+		// 		fromBlock = res - 1000;
+		//
+		// 		this.contracts.getPastEvents('Payment', {fromBlock: 6822380, toBlock: 'latest'}).then(events => {
+		// 			for (let index in events) {
+		// 				this.scWeb3.eth.getTransaction(events[index].transactionHash).then(res => {
+		// 					let decoder = new InputDataDecoder(this.contractABI);
+		// 					let inputs = decoder.decodeData(res.input);
+		// 					let str = MyTools.to66Length(inputs.inputs[0].toString(16));
+		// 					let json = {
+		// 						'str': str,
+		// 						'commit': this.scWeb3.utils.soliditySha3(str),
+		// 						'hash': res.hash,
+		// 					};
+		//
+		// 					console.log(JSON.stringify(json))
+		// 				})
+		// 			}
+		// 		}).catch(error => {
+		// 		})
+		// 	}
+		// }).catch(error => {
+		// });
 	},
 
 	/**
@@ -128,16 +160,7 @@ let ScAction = {
 			let mask = inputs.inputs[0].toString();
 			let modulo = inputs.inputs[1].toString();
 			let blockNumber = inputs.inputs[2].toString();
-			let commit = this.scWeb3.utils.toHex(inputs.inputs[3]);
-
-			// 补齐0x + 64位长
-			if(commit.length < 66) {
-				let tmpStr = '0';
-				for(let i = 1; i < (66 - commit.length); i++) {
-					tmpStr = '0' + tmpStr
-				}
-				commit = '0x' + tmpStr + commit.substr(2);
-			}
+			let commit = MyTools.to66Length(this.scWeb3.utils.toHex(inputs.inputs[3]));
 
 			// 更新数据到数据库
 			const updates = {
@@ -259,12 +282,20 @@ let ScAction = {
 				}
 			};
 		} else {
+			let txHash = '';
+			let settleBetRet = resData.toString();
+			let status = 'error' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
+			if(settleBetRet.indexOf('known transaction') !== -1) {
+				txHash = settleBetRet.substr(42); // 取出合约hash
+				txHash = MyTools.to66Length(txHash.trim());
+				status = 'sent'
+			}
 			params = {
 				commit: commit,
 				updates: {
-					txHash: '',
-					settleBetRet: resData.toString(),
-					status: 'error' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
+					txHash: txHash,
+					settleBetRet: settleBetRet,
+					status: status
 				}
 			};
 		}
