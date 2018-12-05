@@ -32,6 +32,24 @@ MyTools = {
 		}
 
 		return '0x' + tmpStr + str
+	},
+
+	/**
+	 * 补齐0x + 64位长
+	 *
+	 * @param str
+	 * @return {*}
+	 */
+	to66LengthFor0x: function (str) {
+		if(str.length < 66) {
+			let tmpStr = '0';
+			for(let i = 1; i < (66 - str.length); i++) {
+				tmpStr = '0' + tmpStr
+			}
+			str = '0x' + tmpStr + str.substr(2);
+		}
+
+		return str
 	}
 };
 

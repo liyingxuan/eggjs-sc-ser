@@ -160,7 +160,7 @@ let ScAction = {
 			let mask = inputs.inputs[0].toString();
 			let modulo = inputs.inputs[1].toString();
 			let blockNumber = inputs.inputs[2].toString();
-			let commit = MyTools.to66Length(this.scWeb3.utils.toHex(inputs.inputs[3]));
+			let commit = MyTools.to66LengthFor0x(this.scWeb3.utils.toHex(inputs.inputs[3]));
 
 			// 更新数据到数据库
 			const updates = {
