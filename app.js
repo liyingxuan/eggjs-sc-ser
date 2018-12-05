@@ -7,13 +7,13 @@ module.exports = app => {
 		await app.runSchedule('sc-event');
 
 		// 加载文件
-		let myData = JSON.parse(fs.readFileSync('app/public/LoadFiles/my-pk.json'))[0];
+		app.myData = JSON.parse(fs.readFileSync('app/public/LoadFiles/my-pk.json'))[0];
 		app.contractABI = JSON.parse(fs.readFileSync('app/public/LoadFiles/abi.json'));
 
 		// 设置web3
-		app.scWeb3 = new web3(new web3.providers.HttpProvider(myData.serverUrl));
-		app.contracts = new app.scWeb3.eth.Contract(app.contractABI, myData.contractAddress);
-		app.signAccount = app.scWeb3.eth.accounts.privateKeyToAccount(myData.signAccountPK);
-		app.croupierAccount = app.scWeb3.eth.accounts.privateKeyToAccount(myData.croupierAccountPK);
+		app.scWeb3 = new web3(new web3.providers.HttpProvider(app.myData.serverUrl));
+		app.contracts = new app.scWeb3.eth.Contract(app.contractABI, app.myData.contractAddress);
+		app.signAccount = app.scWeb3.eth.accounts.privateKeyToAccount(app.myData.signAccountPK);
+		app.croupierAccount = app.scWeb3.eth.accounts.privateKeyToAccount(app.myData.croupierAccountPK);
 	});
 };
