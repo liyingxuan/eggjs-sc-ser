@@ -1,6 +1,3 @@
-const web3 = require('web3');
-const fs = require('fs');
-const path = require('path'); //系统路径模块
 const InputDataDecoder = require('ethereum-input-data-decoder');
 const EthCrypto = require('eth-crypto');
 const MyTools = require('./MyTools');
@@ -8,56 +5,28 @@ const MyTools = require('./MyTools');
 /**
  * SmartContact Action
  *
- * @type {{contractAbiPath: string, myFilePath: string, contractABI: string, myData: {serverUrl: string, contractAddress: string, signAccountPK: string, croupierAccountPK: string}, scWeb3: string, contracts: string, signAccount: string, croupierAccount: string, init: ScAction.init, getSign: (function(): (Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never>)), getEvents: ScAction.getEvents, setEventCommitData: ScAction.setEventCommitData, redeem: (function(*=, *=, *=, *=): (Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>)), updateSC: (function(*, *=, *=): (any | R | T)), updateStatusSend: (function(*, *=, *=): (any | R | T)), updateStatus: (function(*, *=, *=, *=): (any | R | T)), updatePayment: (function(*, *=, *): boolean)}}
+ * @type {{getSign: (function(*): (Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never>)), getEvents: ScAction.getEvents, setEventCommitData: ScAction.setEventCommitData, redeem: (function(*=, *=, *=, *=): (Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>)), updateSC: (function(*, *=, *=): (any | R | T)), updateStatusSend: (function(*, *=, *=): (any | R | T)), updateStatus: (function(*, *=, *=, *=): (any | R | T)), updatePayment: (function(*, *=, *): boolean)}}
  */
 let ScAction = {
-	contractAbiPath: path.join(__dirname, '../public/LoadFiles/abi.json'),
-	myFilePath: path.join(__dirname, '../public/LoadFiles/my-pk.json'),
-	contractABI: '',
-	myData: {
-		"serverUrl": "",
-		"contractAddress": "",
-		"signAccountPK": "",
-		"croupierAccountPK": ""
-	},
-	scWeb3: '',
-	contracts: '',
-	signAccount: '',
-	croupierAccount: '',
-
-	/**
-	 * 初始化必要参数。
-	 */
-	init: function () {
-		this.contractABI = JSON.parse(fs.readFileSync(this.contractAbiPath));
-		this.myData = JSON.parse(fs.readFileSync(this.myFilePath))[0];
-
-		this.scWeb3 = new web3(new web3.providers.HttpProvider(this.myData.serverUrl));
-		this.contracts = new this.scWeb3.eth.Contract(this.contractABI, this.myData.contractAddress);
-		this.signAccount = this.scWeb3.eth.accounts.privateKeyToAccount(this.myData.signAccountPK);
-		this.croupierAccount = this.scWeb3.eth.accounts.privateKeyToAccount(this.myData.croupierAccountPK);
-	},
-
 	/**
 	 * 通过随机数获取签名等信息。
 	 *
-	 * @return {Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: (*|Buffer|string|number|PromiseLike<ArrayBuffer>)} | never>}
+	 * @param ctx
+	 * @return {Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}}> | Bluebird<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | void | * | PromiseLike<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never> | Promise<{blockNum: *, usedNum: *, random: *, commit: *, sign: {r: string, s: string, v: *}} | never>}
 	 */
-	getSign: function () {
-		this.init();
-
-		return this.scWeb3.eth.getBlockNumber().then(res => {
+	getSign: function (ctx) {
+		return ctx.app.scWeb3.eth.getBlockNumber().then(res => {
 			let num = res + 64; // 补到未来64的高度
-			let bNumber = this.scWeb3.utils.padLeft(num, 10);
-			let randNumber = this.scWeb3.utils.randomHex(32);
-			let commit = this.scWeb3.utils.soliditySha3(randNumber);
-			let hash = this.scWeb3.utils.soliditySha3(bNumber, commit);
+			let bNumber = ctx.app.scWeb3.utils.padLeft(num, 10);
+			let randNumber = ctx.app.scWeb3.utils.randomHex(32);
+			let commit = ctx.app.scWeb3.utils.soliditySha3(randNumber);
+			let hash = ctx.app.scWeb3.utils.soliditySha3(bNumber, commit);
 
-			let signHash = EthCrypto.sign(this.myData.signAccountPK, hash);
+			let signHash = EthCrypto.sign(ctx.app.myData.signAccountPK, hash);
 			let sign = {
 				r: signHash.slice(0, 66),
 				s: '0x' + signHash.slice(66, 130),
-				v: this.scWeb3.utils.toDecimal('0x' + signHash.slice(130, 132))
+				v: ctx.app.scWeb3.utils.toDecimal('0x' + signHash.slice(130, 132))
 			};
 
 			return {
@@ -74,7 +43,8 @@ let ScAction = {
 	 * 定时任务：获取Events的commit类型
 	 */
 	getEvents: function (ctx) {
-		this.init();
+		if(ctx.app.contractABI === undefined) return;
+
 		let fromBlock = 4452452;
 
 		// 获得状态为starting的当天第一条数据的块高，然后减去300
@@ -83,7 +53,7 @@ let ScAction = {
 				fromBlock = res - 300;
 
 				// event Commit
-				this.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
+				ctx.app.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
 					if (events.length > 0) {
 						for (let index in events) {
 							ScAction.setEventCommitData(events[index], ctx);
@@ -101,7 +71,7 @@ let ScAction = {
 				fromBlock = res - 300;
 
 				// event Payment
-				this.contracts.getPastEvents('Payment', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
+				ctx.app.contracts.getPastEvents('Payment', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
 					if (events.length > 0) {
 						for (let index in events) {
 							if (typeof(events[index].transactionHash) !== 'undefined') {
@@ -120,15 +90,15 @@ let ScAction = {
 		// 	if (res !== false) {
 		// 		fromBlock = res - 1000;
 		//
-		// 		this.contracts.getPastEvents('Payment', {fromBlock: 6822380, toBlock: 'latest'}).then(events => {
+		// 		ctx.app.contracts.getPastEvents('Payment', {fromBlock: 6822380, toBlock: 'latest'}).then(events => {
 		// 			for (let index in events) {
-		// 				this.scWeb3.eth.getTransaction(events[index].transactionHash).then(res => {
-		// 					let decoder = new InputDataDecoder(this.contractABI);
+		// 				ctx.app.scWeb3.eth.getTransaction(events[index].transactionHash).then(res => {
+		// 					let decoder = new InputDataDecoder(ctx.app.contractABI);
 		// 					let inputs = decoder.decodeData(res.input);
 		// 					let str = MyTools.to66Length(inputs.inputs[0].toString(16));
 		// 					let json = {
 		// 						'str': str,
-		// 						'commit': this.scWeb3.utils.soliditySha3(str),
+		// 						'commit': ctx.app.scWeb3.utils.soliditySha3(str),
 		// 						'hash': res.hash,
 		// 					};
 		//
@@ -149,18 +119,16 @@ let ScAction = {
 	 * @param ctx
 	 */
 	setEventCommitData: function (data, ctx) {
-		this.init();
-
-		this.scWeb3.eth.getTransaction(data.transactionHash).then(res => {
-			const decoder = new InputDataDecoder(this.contractABI);
+		ctx.app.scWeb3.eth.getTransaction(data.transactionHash).then(res => {
+			const decoder = new InputDataDecoder(ctx.app.contractABI);
 
 			// 解构event获得的数据
 			let inputs = decoder.decodeData(res.input);
-			let value = this.scWeb3.utils.fromWei(res.value, 'ether');
+			let value = ctx.app.scWeb3.utils.fromWei(res.value, 'ether');
 			let mask = inputs.inputs[0].toString();
 			let modulo = inputs.inputs[1].toString();
 			let blockNumber = inputs.inputs[2].toString();
-			let commit = MyTools.to66LengthFor0x(this.scWeb3.utils.toHex(inputs.inputs[3]));
+			let commit = MyTools.to66LengthFor0x(ctx.app.scWeb3.utils.toHex(inputs.inputs[3]));
 
 			// 更新数据到数据库
 			const updates = {
@@ -190,26 +158,24 @@ let ScAction = {
 	 * @return {Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>}
 	 */
 	redeem: function (ctx, commit, reveal, blockHash) {
-		this.init();
-
-		return this.scWeb3.eth.getTransactionCount(this.croupierAccount.address).then((nonce) => {
+		return ctx.app.scWeb3.eth.getTransactionCount(ctx.app.croupierAccount.address).then((nonce) => {
 			// Get gas price
-			return this.scWeb3.eth.getGasPrice().then(price => {
+			return ctx.app.scWeb3.eth.getGasPrice().then(price => {
 				let rawTransaction = {
-					"from": this.croupierAccount.address,
-					"gasPrice": this.scWeb3.utils.toHex(price),
-					"gasLimit": this.scWeb3.utils.toHex(210000),
-					"to": this.myData.contractAddress,
+					"from": ctx.app.croupierAccount.address,
+					"gasPrice": ctx.app.scWeb3.utils.toHex(price),
+					"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
+					"to": ctx.app.myData.contractAddress,
 					"value": 0,
-					"data": this.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
-					"nonce": this.scWeb3.utils.toHex(nonce)
+					"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
+					"nonce": ctx.app.scWeb3.utils.toHex(nonce)
 				};
 
 				// Update to send
 				this.updateStatusSend(ctx, commit, rawTransaction);
 
-				return this.croupierAccount.signTransaction(rawTransaction).then(sTx => {
-					this.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
+				return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
+					ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
 						return this.updateStatus(ctx, commit, res, true)
 					}).catch(error => {
 						return this.updateStatus(ctx, commit, error, false)

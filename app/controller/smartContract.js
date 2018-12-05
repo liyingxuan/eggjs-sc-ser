@@ -89,7 +89,7 @@ class SmartContractController extends Controller {
 			// 签名
 			try {
 				do {
-					res = await ScAction.getSign();
+					res = await ScAction.getSign(ctx);
 				} while (res.sign.v !== 27) ; // 必须要27，否则无法使用
 			} catch (e) {
 				ctx.status = 500;
