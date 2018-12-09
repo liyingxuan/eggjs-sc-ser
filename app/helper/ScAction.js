@@ -158,31 +158,27 @@ let ScAction = {
 	 * @return {Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>}
 	 */
 	redeem: function (ctx, commit, reveal, blockHash) {
-		return ctx.app.scWeb3.eth.getTransactionCount(ctx.app.croupierAccount.address).then((nonce) => {
-			// Get gas price
-			return ctx.app.scWeb3.eth.getGasPrice().then(price => {
-				let rawTransaction = {
-					"from": ctx.app.croupierAccount.address,
-					"gasPrice": ctx.app.scWeb3.utils.toHex(price),
-					"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
-					"to": ctx.app.myData.contractAddress,
-					"value": 0,
-					"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
-					"nonce": ctx.app.scWeb3.utils.toHex(nonce)
-				};
+		return ctx.app.scWeb3.eth.getGasPrice().then(price => {
+			let rawTransaction = {
+				"from": ctx.app.croupierAccount.address,
+				"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.scWeb3.utils.toDecimal(price) * 1.2),
+				"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
+				"to": ctx.app.myData.contractAddress,
+				"value": 0,
+				"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI()
+			};
 
-				// Update to send
-				this.updateStatusSend(ctx, commit, rawTransaction);
+			// Update to send
+			this.updateStatusSend(ctx, commit, rawTransaction);
 
-				return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
-					ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-						return this.updateStatus(ctx, commit, res, true)
-					}).catch(error => {
-						return this.updateStatus(ctx, commit, error, false)
-					})
-				});
-			})
-		})
+			return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
+				ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
+					return this.updateStatus(ctx, commit, res, true)
+				}).catch(error => {
+					return this.updateStatus(ctx, commit, error, false)
+				})
+			});
+		}).catch()
 	},
 
 	/**
