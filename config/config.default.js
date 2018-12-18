@@ -4,7 +4,7 @@ module.exports = appInfo => {
 	const config = {};
 
 	// should change to your own
-	config.keys = appInfo.name + '_1490750627161_5967';
+	config.keys = appInfo.name + '_1490750627161_eth9523';
 
 	config.middleware = ['errorHandler'];
 

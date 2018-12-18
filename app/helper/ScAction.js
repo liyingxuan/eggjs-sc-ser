@@ -161,7 +161,7 @@ let ScAction = {
 		return ctx.app.scWeb3.eth.getGasPrice().then(price => {
 			let rawTransaction = {
 				"from": ctx.app.croupierAccount.address,
-				"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.scWeb3.utils.toDecimal(price) * 1.2),
+				"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.scWeb3.utils.toDecimal(price) * 1.6),
 				"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
 				"to": ctx.app.myData.contractAddress,
 				"value": 0,
