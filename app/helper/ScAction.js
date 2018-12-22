@@ -157,11 +157,9 @@ let ScAction = {
 
 		return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
 			ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-				return this.updateStatus(ctx, commit, res, true).then(res => {
-					if (res !== false) {
-						this.getTransactionToDb(ctx, placeTxHash, commit)
-					}
-				})
+				this.getTransactionToDb(ctx, placeTxHash, commit);
+
+				return this.updateStatus(ctx, commit, res, true)
 			}).catch(error => {
 				return this.updateStatus(ctx, commit, error, false)
 			})
