@@ -126,7 +126,7 @@ let ScAction = {
 			commitBlockHash: commitBlockHash
 		};
 
-		this.updateSC(ctx, commit, updates).then(res => {
+		this.updateSC(ctx, commit, updates, 'starting').then(res => {
 			if (res !== false) {
 				this.redeem(ctx, res.commit, res.random, commitBlockHash, placeTxHash);
 			}
@@ -186,7 +186,7 @@ let ScAction = {
 				blockNumber: inputs.inputs[2].toString()
 			};
 
-			this.updateSC(ctx, commit, updates).then();
+			this.updateSC(ctx, commit, updates, '').then();
 		});
 	},
 
@@ -196,15 +196,16 @@ let ScAction = {
 	 * @param ctx
 	 * @param commit
 	 * @param updates
+	 * @param status
 	 * @return {*}
 	 */
-	updateSC: async function (ctx, commit, updates) {
+	updateSC: async function (ctx, commit, updates, status) {
 		const params = {
 			commit: commit,
 			updates: updates
 		};
 
-		return await ctx.service.smartContract.update(params, 'starting').then(res => {
+		return await ctx.service.smartContract.update(params, status).then(res => {
 			return res;
 		});
 	},

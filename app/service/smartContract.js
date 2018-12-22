@@ -76,15 +76,13 @@ class SmartContract extends Service {
 
 	// 更新数据
 	async update({commit, updates}, status) {
-		const data = await this.ctx.model.SmartContract.find({
-			where: {
-				commit: commit,
-				status: status // starting：开始游戏；send:发送了sign； sent：已发送settleBet； completed：已完成。
-			}
-		});
-		if (!data) {
-			return false
+		let where = {commit: commit};
+		if (status !== '') { // starting：开始游戏；send:发送了sign； sent：已发送settleBet； completed：已完成。
+			where.status = status;
 		}
+
+		const data = await this.ctx.model.SmartContract.find({where: where});
+		if (!data) return false;
 
 		// 更新入库
 		data.update(updates);
