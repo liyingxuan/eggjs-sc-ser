@@ -256,7 +256,7 @@ let ScAction = {
 		} else {
 			let txHash = '';
 			let settleBetRet = resData.toString();
-			let status = 'error' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
+			let status = 'error'; // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
 			if(settleBetRet.indexOf('known transaction') !== -1) {
 				txHash = settleBetRet.substr(42); // 取出合约hash
 				txHash = MyTools.to66Length(txHash.trim());

@@ -11,7 +11,7 @@ class SmartContractController extends Controller {
 	 * Func: 获取全部数据，默认10条。
 	 *
 	 * 获取5条每页的第2页，地址是test的（3个参数都可选）：
-	 * http://localhost:7001/api/sc?limit=5&offset=2&address=test
+	 * http://localhost:7001/api/sc?limit=5&offset=2&address=test&modulo=
 	 *
 	 * @return {Promise<void>}
 	 */

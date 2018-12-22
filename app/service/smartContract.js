@@ -13,15 +13,20 @@ class SmartContract extends Service {
 				attributes: attributes,
 				offset,
 				limit,
-				order: order,
+				order: order
 			});
 		} else {
 			let where = {};
 
 			if (typeof(modulo) === 'undefined' || modulo === '') {
 				where = {address: address}
-			} else {
+			} else if (typeof(address) === 'undefined' || address === '') {
 				where = {modulo: modulo}
+			} else {
+				where = {
+					address: address,
+					modulo: modulo
+				}
 			}
 
 			return this.ctx.model.SmartContract.findAndCountAll({
