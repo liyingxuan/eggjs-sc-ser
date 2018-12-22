@@ -3,10 +3,6 @@ const fs = require('fs');
 
 module.exports = app => {
 	app.beforeStart(async () => {
-		// 应用会等待这个函数执行完成才启动
-		await app.runSchedule('sc-event');
-		await app.runSchedule('update-gas-price');
-
 		// 加载文件
 		app.myData = JSON.parse(fs.readFileSync('app/public/LoadFiles/my-pk.json'))[0];
 		app.contractABI = JSON.parse(fs.readFileSync('app/public/LoadFiles/abi.json'));
@@ -19,5 +15,10 @@ module.exports = app => {
 
 		// 初始Gas Price
 		app.latestGasPrice = 12000000000;
+
+		// 应用会等待这个函数执行完成才启动
+		await app.runSchedule('sc-event');
+		await app.runSchedule('update-gas-price');
+
 	});
 };
