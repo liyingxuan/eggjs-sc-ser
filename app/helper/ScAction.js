@@ -117,32 +117,19 @@ let ScAction = {
 	 * @param ctx
 	 */
 	setEventCommitData: function (data, ctx) {
-		ctx.app.scWeb3.eth.getTransaction(data.transactionHash).then(res => {
-			const decoder = new InputDataDecoder(ctx.app.contractABI);
+		let commit = MyTools.to66LengthFor0x(ctx.app.scWeb3.utils.toHex(data.returnValues.commit));
+		let placeTxHash = data.transactionHash;
+		let commitBlockHash = data.blockHash;
 
-			// 解构event获得的数据
-			let inputs = decoder.decodeData(res.input);
-			let value = ctx.app.scWeb3.utils.fromWei(res.value, 'ether');
-			let mask = inputs.inputs[0].toString();
-			let modulo = inputs.inputs[1].toString();
-			let blockNumber = inputs.inputs[2].toString();
-			let commit = MyTools.to66LengthFor0x(ctx.app.scWeb3.utils.toHex(inputs.inputs[3]));
+		const updates = {
+			placeTxHash: placeTxHash,
+			commitBlockHash: commitBlockHash
+		};
 
-			// 更新数据到数据库
-			const updates = {
-				placeTxHash: res.hash,
-				commitBlockHash: res.blockHash,
-				value: value,
-				mask: mask,
-				modulo: modulo,
-				blockNumber: blockNumber
-			};
-
-			this.updateSC(ctx, commit, updates).then(res => {
-				if (res !== false) {
-					this.redeem(ctx, res.commit, res.random, data.blockHash);
-				}
-			});
+		this.updateSC(ctx, commit, updates).then(res => {
+			if (res !== false) {
+				this.redeem(ctx, res.commit, res.random, commitBlockHash, placeTxHash);
+			}
 		});
 	},
 
@@ -155,7 +142,7 @@ let ScAction = {
 	 * @param blockHash
 	 * @return {Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>}
 	 */
-	redeem: function (ctx, commit, reveal, blockHash) {
+	redeem: function (ctx, commit, reveal, blockHash, placeTxHash) {
 		let rawTransaction = {
 			"from": ctx.app.croupierAccount.address,
 			"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.latestGasPrice),
@@ -170,10 +157,38 @@ let ScAction = {
 
 		return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
 			ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-				return this.updateStatus(ctx, commit, res, true)
+				return this.updateStatus(ctx, commit, res, true).then(res => {
+					if (res !== false) {
+						this.getTransactionToDb(ctx, placeTxHash, commit)
+					}
+				})
 			}).catch(error => {
 				return this.updateStatus(ctx, commit, error, false)
 			})
+		});
+	},
+
+	/**
+	 * 获取交易信息解析详细数据入库
+	 *
+	 * @param ctx
+	 * @param placeTxHash
+	 * @param commit
+	 */
+	getTransactionToDb: function (ctx, placeTxHash, commit) {
+		ctx.app.scWeb3.eth.getTransaction(placeTxHash).then(txRes => {
+			const decoder = new InputDataDecoder(ctx.app.contractABI);
+			let inputs = decoder.decodeData(txRes.input);
+
+			// 更新数据到数据库
+			const updates = {
+				value: ctx.app.scWeb3.utils.fromWei(txRes.value, 'ether'),
+				mask: inputs.inputs[0].toString(),
+				modulo: inputs.inputs[1].toString(),
+				blockNumber: inputs.inputs[2].toString()
+			};
+
+			this.updateSC(ctx, commit, updates).then();
 		});
 	},
 
