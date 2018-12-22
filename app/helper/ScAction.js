@@ -16,7 +16,7 @@ let ScAction = {
 	 */
 	getSign: function (ctx) {
 		return ctx.app.scWeb3.eth.getBlockNumber().then(res => {
-			let num = res + 64; // 补到未来64的高度
+			let num = res + 200;
 			let bNumber = ctx.app.scWeb3.utils.padLeft(num, 10);
 			let randNumber = ctx.app.scWeb3.utils.randomHex(32);
 			let commit = ctx.app.scWeb3.utils.soliditySha3(randNumber);
@@ -40,13 +40,29 @@ let ScAction = {
 	},
 
 	/**
-	 * 定时任务：获取Events的commit类型
+	 * 获取最新的gas price
+	 *
+	 * @param ctx
+	 */
+	getLatestGasPrice(ctx) {
+		ctx.app.scWeb3.eth.getGasPrice().then(price => {
+			ctx.app.latestGasPrice = price;
+		})
+	},
+
+	/**
+	 * 定时任务：获取Events
 	 */
 	getEvents: function (ctx) {
-		if(ctx.app.contractABI === undefined) return;
+		if (ctx.app.contractABI === undefined) return;
 
 		let fromBlock = 4452452;
 
+		this.getCommitEvent(ctx, fromBlock);
+		this.getPaymentEvent(ctx, fromBlock);
+	},
+
+	getCommitEvent(ctx, fromBlock) {
 		// 获得状态为starting的当天第一条数据的块高，然后减去300
 		ctx.service.smartContract.getFromBlock('starting').then(res => {
 			if (res !== false) {
@@ -64,7 +80,9 @@ let ScAction = {
 			}
 		}).catch(error => {
 		});
+	},
 
+	getPaymentEvent(ctx, fromBlock) {
 		// 获得状态为sent的当天第一条数据的块高，然后减去300
 		ctx.service.smartContract.getFromBlock('sent').then(res => {
 			if (res !== false) {
@@ -84,32 +102,6 @@ let ScAction = {
 			}
 		}).catch(error => {
 		});
-
-		// 获得状态为send的当天第一条数据的块高，然后减去300
-		// ctx.service.smartContract.getFromBlock('starting').then(res => {
-		// 	if (res !== false) {
-		// 		fromBlock = res - 1000;
-		//
-		// 		ctx.app.contracts.getPastEvents('Payment', {fromBlock: 6822380, toBlock: 'latest'}).then(events => {
-		// 			for (let index in events) {
-		// 				ctx.app.scWeb3.eth.getTransaction(events[index].transactionHash).then(res => {
-		// 					let decoder = new InputDataDecoder(ctx.app.contractABI);
-		// 					let inputs = decoder.decodeData(res.input);
-		// 					let str = MyTools.to66Length(inputs.inputs[0].toString(16));
-		// 					let json = {
-		// 						'str': str,
-		// 						'commit': ctx.app.scWeb3.utils.soliditySha3(str),
-		// 						'hash': res.hash,
-		// 					};
-		//
-		// 					console.log(JSON.stringify(json))
-		// 				})
-		// 			}
-		// 		}).catch(error => {
-		// 		})
-		// 	}
-		// }).catch(error => {
-		// });
 	},
 
 	/**
@@ -158,27 +150,25 @@ let ScAction = {
 	 * @return {Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>}
 	 */
 	redeem: function (ctx, commit, reveal, blockHash) {
-		return ctx.app.scWeb3.eth.getGasPrice().then(price => {
-			let rawTransaction = {
-				"from": ctx.app.croupierAccount.address,
-				"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.scWeb3.utils.toDecimal(price) * 1.6),
-				"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
-				"to": ctx.app.myData.contractAddress,
-				"value": 0,
-				"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI()
-			};
+		let rawTransaction = {
+			"from": ctx.app.croupierAccount.address,
+			"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.scWeb3.utils.toDecimal(ctx.app.latestGasPrice) * 1.6),
+			"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
+			"to": ctx.app.myData.contractAddress,
+			"value": 0,
+			"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI()
+		};
 
-			// Update to send
-			this.updateStatusSend(ctx, commit, rawTransaction);
+		// Update to send
+		this.updateStatusSend(ctx, commit, rawTransaction);
 
-			return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
-				ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-					return this.updateStatus(ctx, commit, res, true)
-				}).catch(error => {
-					return this.updateStatus(ctx, commit, error, false)
-				})
-			});
-		}).catch()
+		return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
+			ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
+				return this.updateStatus(ctx, commit, res, true)
+			}).catch(error => {
+				return this.updateStatus(ctx, commit, error, false)
+			})
+		});
 	},
 
 	/**
