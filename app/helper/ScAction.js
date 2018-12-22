@@ -46,7 +46,13 @@ let ScAction = {
 	 */
 	getLatestGasPrice(ctx) {
 		ctx.app.scWeb3.eth.getGasPrice().then(price => {
-			ctx.app.latestGasPrice = price;
+			price = ctx.app.scWeb3.utils.toDecimal(price) * 1.6;
+
+			if (price < 11000000000) {
+				ctx.app.latestGasPrice = 11000000000
+			} else {
+				ctx.app.latestGasPrice = price;
+			}
 		})
 	},
 
@@ -152,7 +158,7 @@ let ScAction = {
 	redeem: function (ctx, commit, reveal, blockHash) {
 		let rawTransaction = {
 			"from": ctx.app.croupierAccount.address,
-			"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.scWeb3.utils.toDecimal(ctx.app.latestGasPrice) * 1.6),
+			"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.latestGasPrice),
 			"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
 			"to": ctx.app.myData.contractAddress,
 			"value": 0,

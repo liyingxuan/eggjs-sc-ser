@@ -5,7 +5,7 @@ class ScEvent extends Subscription {
 	// 通过 schedule 属性来设置定时任务的执行间隔等配置
 	static get schedule() {
 		return {
-			interval: '12s',
+			interval: '15s',
 			type: 'all', // 指定所有的 worker 都需要执行
 		};
 	}
