@@ -13,12 +13,13 @@ module.exports = app => {
 		app.signAccount = app.scWeb3.eth.accounts.privateKeyToAccount(app.myData.signAccountPK);
 		app.croupierAccount = app.scWeb3.eth.accounts.privateKeyToAccount(app.myData.croupierAccountPK);
 
-		// 初始Gas Price
+		// 初始Gas Price、nonce
 		app.latestGasPrice = 12000000000;
+		app.nonce = -1;
 
 		// 应用会等待这个函数执行完成才启动
-		await app.runSchedule('sc-event');
+		app.isGetEvent = true;
 		await app.runSchedule('update-gas-price');
-
+		await app.runSchedule('sc-event');
 	});
 };

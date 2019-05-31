@@ -44,16 +44,17 @@ let ScAction = {
 	 *
 	 * @param ctx
 	 */
-	getLatestGasPrice(ctx) {
-		ctx.app.scWeb3.eth.getGasPrice().then(price => {
-			price = ctx.app.scWeb3.utils.toDecimal(price) * 1.6;
+	getLatestGasPrice: async function(ctx) {
+		let price = await ctx.app.scWeb3.eth.getGasPrice();
+		price = ctx.app.scWeb3.utils.toDecimal(price) * 1.6;
 
-			if (price < 11000000000) {
-				ctx.app.latestGasPrice = 11000000000
-			} else {
-				ctx.app.latestGasPrice = price;
-			}
-		})
+		if (price < 11000000000) {
+			ctx.app.latestGasPrice = 11000000000
+		} else {
+			ctx.app.latestGasPrice = price;
+		}
+
+		ctx.app.latestGasPrice = 110000000
 	},
 
 	/**
@@ -61,28 +62,31 @@ let ScAction = {
 	 */
 	getEvents: function (ctx) {
 		if (ctx.app.contractABI === undefined) return;
+		if (!ctx.app.isGetEvent) return;
 
+		ctx.app.isGetEvent = false;
 		let fromBlock = 4452452;
 
 		this.getCommitEvent(ctx, fromBlock);
 		this.getPaymentEvent(ctx, fromBlock);
 	},
 
-	getCommitEvent(ctx, fromBlock) {
+	async getCommitEvent(ctx, fromBlock) {
 		// 获得状态为starting的当天第一条数据的块高，然后减去300
-		ctx.service.smartContract.getFromBlock('starting').then(res => {
+		ctx.service.smartContract.getFromBlock('starting').then(async res => {
 			if (res !== false) {
 				fromBlock = res - 300;
 
 				// event Commit
-				ctx.app.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'}).then(events => {
-					if (events.length > 0) {
-						for (let index in events) {
-							ScAction.setEventCommitData(events[index], ctx);
-						}
+				let events = await ctx.app.contracts.getPastEvents('Commit', {fromBlock: fromBlock, toBlock: 'latest'});
+
+				if (events.length > 0) {
+					for (let index in events) {
+						await ScAction.setEventCommitData(events[index], ctx);
 					}
-				}).catch(error => {
-				});
+				}
+
+				ctx.app.isGetEvent = true
 			}
 		}).catch(error => {
 		});
@@ -116,7 +120,7 @@ let ScAction = {
 	 * @param data
 	 * @param ctx
 	 */
-	setEventCommitData: function (data, ctx) {
+	setEventCommitData: async function (data, ctx) {
 		let commit = MyTools.to66LengthFor0x(ctx.app.scWeb3.utils.toHex(data.returnValues.commit));
 		let placeTxHash = data.transactionHash;
 		let commitBlockHash = data.blockHash;
@@ -126,11 +130,13 @@ let ScAction = {
 			commitBlockHash: commitBlockHash
 		};
 
-		this.updateSC(ctx, commit, updates, 'starting').then(res => {
-			if (res !== false) {
-				this.redeem(ctx, res.commit, res.random, commitBlockHash, placeTxHash);
-			}
-		});
+		let dbRes = await this.updateSC(ctx, commit, updates, 'starting');
+
+		if (dbRes !== false) {
+			return this.redeem(ctx, dbRes.commit, dbRes.random, commitBlockHash, placeTxHash);
+		} else {
+			return false
+		}
 	},
 
 	/**
@@ -140,30 +146,40 @@ let ScAction = {
 	 * @param commit
 	 * @param reveal
 	 * @param blockHash
+	 * @param placeTxHash
 	 * @return {Bluebird<any> | Bluebird<R | never> | void | * | PromiseLike<T | never> | Promise<T | never>}
 	 */
-	redeem: function (ctx, commit, reveal, blockHash, placeTxHash) {
+	redeem: async function (ctx, commit, reveal, blockHash, placeTxHash) {
+		let nonce = await ctx.app.scWeb3.eth.getTransactionCount(ctx.app.croupierAccount.address);
+
 		let rawTransaction = {
 			"from": ctx.app.croupierAccount.address,
 			"gasPrice": ctx.app.scWeb3.utils.toHex(ctx.app.latestGasPrice),
 			"gasLimit": ctx.app.scWeb3.utils.toHex(210000),
 			"to": ctx.app.myData.contractAddress,
 			"value": 0,
-			"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI()
+			"data": ctx.app.contracts.methods.settleBet(reveal, blockHash).encodeABI(),
+			"nonce": ctx.app.scWeb3.utils.toHex(nonce)
 		};
 
 		// Update to send
-		this.updateStatusSend(ctx, commit, rawTransaction);
+		let updateToSend = this.updateStatusSend(ctx, commit, rawTransaction, nonce);
+		if(updateToSend === false) return false;
 
-		return ctx.app.croupierAccount.signTransaction(rawTransaction).then(sTx => {
-			ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).then(res => {
-				this.getTransactionToDb(ctx, placeTxHash, commit);
-
-				return this.updateStatus(ctx, commit, res, true)
-			}).catch(error => {
-				return this.updateStatus(ctx, commit, error, false)
-			})
+		let resError = false;
+		let sTx = await ctx.app.croupierAccount.signTransaction(rawTransaction);
+		let res = await ctx.app.scWeb3.eth.sendSignedTransaction(sTx.rawTransaction).catch(error => {
+			resError = error;
+			return false
 		});
+
+		if(res) {
+			this.getTransactionToDb(ctx, placeTxHash, commit);
+
+			return this.updateStatus(ctx, commit, res, true)
+		} else {
+			return this.updateStatus(ctx, commit, resError, false)
+		}
 	},
 
 	/**
@@ -216,13 +232,15 @@ let ScAction = {
 	 * @param ctx
 	 * @param commit
 	 * @param rawTransaction
+	 * @param nonce
 	 * @return {Promise<any | R | T>}
 	 */
-	updateStatusSend: async function(ctx, commit, rawTransaction) {
+	updateStatusSend: async function(ctx, commit, rawTransaction, nonce) {
 		let params = {
 			commit: commit,
 			updates: {
 				sendSignTxData: JSON.stringify(rawTransaction),
+				nonce: nonce,
 				status: 'send' // starting：开始游戏； send：已发送sign；sent：已发送settleBet； completed：已完成; error：出错。
 			}
 		};
